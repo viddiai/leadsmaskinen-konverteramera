@@ -46,13 +46,13 @@ export function LeadForm({ reportId, onSubmit, onBack, isLoading, isSuccess }: L
   if (isSuccess) {
     return (
       <div className="card animate-slide-up max-w-md mx-auto text-center">
-        <div className="w-16 h-16 bg-primary-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Check className="text-primary-500" size={32} />
+        <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Check className="text-success" size={32} />
         </div>
-        <h2 className="text-xl font-bold text-white mb-2">
+        <h2 className="text-xl font-bold text-graphite mb-2">
           Tack!
         </h2>
-        <p className="text-gray-400">
+        <p className="text-steel">
           Din fullständiga rapport laddas nu...
         </p>
       </div>
@@ -63,22 +63,22 @@ export function LeadForm({ reportId, onSubmit, onBack, isLoading, isSuccess }: L
     <div className="card animate-slide-up max-w-md mx-auto">
       <button
         onClick={onBack}
-        className="flex items-center gap-1 text-gray-400 hover:text-white text-sm mb-4 transition-colors"
+        className="flex items-center gap-1 text-steel hover:text-graphite text-sm mb-4 transition-colors"
       >
         <ArrowLeft size={16} />
         Tillbaka
       </button>
 
-      <h2 className="text-xl font-bold text-white mb-2">
+      <h2 className="text-xl font-bold text-graphite mb-2">
         Fyll i för att få rapporten
       </h2>
-      <p className="text-gray-400 text-sm mb-6">
-        Vi skickar inga spam - bara din rapport.
+      <p className="text-steel text-sm mb-6">
+        Vi skickar inga spam &ndash; bara din rapport.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-1">
+          <label htmlFor="name" className="block text-sm font-medium text-graphite mb-1">
             Namn *
           </label>
           <input
@@ -93,7 +93,7 @@ export function LeadForm({ reportId, onSubmit, onBack, isLoading, isSuccess }: L
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
+          <label htmlFor="email" className="block text-sm font-medium text-graphite mb-1">
             E-post *
           </label>
           <input
@@ -108,7 +108,7 @@ export function LeadForm({ reportId, onSubmit, onBack, isLoading, isSuccess }: L
         </div>
 
         <div>
-          <label htmlFor="company" className="block text-sm font-medium text-gray-300 mb-1">
+          <label htmlFor="company" className="block text-sm font-medium text-graphite mb-1">
             Företagsnamn (valfritt)
           </label>
           <input
@@ -123,7 +123,7 @@ export function LeadForm({ reportId, onSubmit, onBack, isLoading, isSuccess }: L
         </div>
 
         {error && (
-          <p className="text-red-400 text-sm">{error}</p>
+          <p className="text-red-500 text-sm font-medium">{error}</p>
         )}
 
         <button

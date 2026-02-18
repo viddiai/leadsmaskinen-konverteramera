@@ -2,89 +2,46 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Geist Font */
-@font-face {
-  font-family: 'Geist';
-  src: url('https://cdn.jsdelivr.net/npm/geist@1.2.0/dist/fonts/geist-sans/Geist-Regular.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Geist';
-  src: url('https://cdn.jsdelivr.net/npm/geist@1.2.0/dist/fonts/geist-sans/Geist-Medium.woff2') format('woff2');
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Geist';
-  src: url('https://cdn.jsdelivr.net/npm/geist@1.2.0/dist/fonts/geist-sans/Geist-SemiBold.woff2') format('woff2');
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Geist';
-  src: url('https://cdn.jsdelivr.net/npm/geist@1.2.0/dist/fonts/geist-sans/Geist-Bold.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
 @layer base {
   html {
     scroll-behavior: smooth;
   }
 
   body {
-    @apply bg-black text-white antialiased;
+    @apply bg-softwhite text-steel antialiased;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Hide scrollbar */
-  ::-webkit-scrollbar {
-    display: none;
-  }
-
-  body {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
-  /* Selection highlight - emerald accent */
+  /* Selection highlight - Leadsmaskinen Orange accent */
   ::selection {
-    background-color: rgba(16, 185, 129, 0.2);
-    color: #10b981;
+    background-color: rgba(255, 106, 61, 0.15);
+    color: #FF6A3D;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply px-6 py-3 bg-primary-500 text-white font-medium rounded-lg
-           hover:bg-primary-600 transition-all duration-200
-           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-black;
+    @apply px-8 py-4 bg-primary-500 text-white font-semibold rounded-lg text-lg
+           hover:bg-primary-600 transition-all duration-200 shadow-lg shadow-primary-500/20
+           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
   }
 
   .btn-secondary {
-    @apply px-6 py-3 bg-white/10 text-white font-medium rounded-lg border border-white/20
-           hover:bg-white/20 transition-all duration-200
-           focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-black;
+    @apply px-6 py-3 bg-white text-graphite font-medium rounded-lg border border-lightgrey
+           hover:bg-gray-50 transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:ring-offset-2;
   }
 
   .input-field {
-    @apply w-full px-4 py-3 border border-white/20 rounded-lg
-           bg-white/5 text-white
+    @apply w-full px-4 py-3 border border-lightgrey rounded-lg
+           bg-white text-graphite
            focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-           placeholder:text-gray-500;
+           placeholder:text-steel/50;
   }
 
   .card {
-    @apply bg-white/5 rounded-xl border border-white/10 p-6 backdrop-blur-sm;
+    @apply bg-white rounded-xl border border-lightgrey p-6 shadow-sm;
   }
 
   /* Animate elements on scroll */

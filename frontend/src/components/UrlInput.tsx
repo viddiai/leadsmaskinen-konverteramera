@@ -41,20 +41,20 @@ export function UrlInput({ onSubmit, isLoading }: UrlInputProps) {
     <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto">
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="flex-1 relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-steel/50" size={20} />
           <input
             type="text"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="Ange URL att analysera, t.ex. www.example.se"
-            className="input-field pl-12"
+            className="input-field pl-12 shadow-sm"
             disabled={isLoading}
           />
         </div>
         <button
           type="submit"
           disabled={isLoading}
-          className="btn-primary flex items-center justify-center gap-2 min-w-[140px]"
+          className="btn-primary flex items-center justify-center gap-2 min-w-[160px]"
         >
           {isLoading ? (
             <>
@@ -67,7 +67,7 @@ export function UrlInput({ onSubmit, isLoading }: UrlInputProps) {
         </button>
       </div>
       {error && (
-        <p className="mt-2 text-red-400 text-sm">{error}</p>
+        <p className="mt-2 text-red-500 text-sm font-medium">{error}</p>
       )}
     </form>
   )

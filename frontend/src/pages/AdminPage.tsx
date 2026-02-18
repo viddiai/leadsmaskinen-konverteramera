@@ -43,19 +43,19 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-softwhite">
       {/* Header */}
-      <header className="bg-white/5 border-b border-white/10">
+      <header className="bg-white border-b border-lightgrey">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold text-white">
+            <h1 className="text-xl font-bold text-graphite">
               Admin Dashboard
             </h1>
             <a
               href="/"
-              className="text-primary-500 hover:text-primary-400 text-sm transition-colors"
+              className="text-primary-500 hover:text-primary-600 text-sm transition-colors"
             >
-              ← Tillbaka till startsidan
+              &larr; Tillbaka till startsidan
             </a>
           </div>
         </div>
@@ -93,15 +93,15 @@ export default function AdminPage() {
         {/* Top Issues */}
         {stats?.top_issues && stats.top_issues.length > 0 && (
           <div className="card mb-8">
-            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <AlertTriangle className="text-orange-400" size={20} />
+            <h2 className="text-lg font-semibold text-graphite mb-4 flex items-center gap-2">
+              <AlertTriangle className="text-warning" size={20} />
               Vanligaste Problemen
             </h2>
             <div className="flex flex-wrap gap-2">
               {stats.top_issues.map((issue) => (
                 <span
                   key={issue.criterion}
-                  className="px-3 py-1 bg-orange-500/20 text-orange-300 rounded-full text-sm"
+                  className="px-3 py-1 bg-primary-50 text-primary-700 rounded-full text-sm font-medium"
                 >
                   {issue.criterion}: {issue.count} st
                 </span>
@@ -114,25 +114,25 @@ export default function AdminPage() {
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Leads Table */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-white mb-4">
+            <h2 className="text-lg font-semibold text-graphite mb-4">
               Senaste Leads
             </h2>
             {leadsQuery.isLoading ? (
-              <p className="text-gray-500">Laddar...</p>
+              <p className="text-steel">Laddar...</p>
             ) : leads.length === 0 ? (
-              <p className="text-gray-500">Inga leads ännu</p>
+              <p className="text-steel">Inga leads ännu</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="text-left py-2 font-medium text-gray-400">
+                    <tr className="border-b border-lightgrey">
+                      <th className="text-left py-2 font-medium text-steel">
                         Namn
                       </th>
-                      <th className="text-left py-2 font-medium text-gray-400">
+                      <th className="text-left py-2 font-medium text-steel">
                         E-post
                       </th>
-                      <th className="text-left py-2 font-medium text-gray-400">
+                      <th className="text-left py-2 font-medium text-steel">
                         Datum
                       </th>
                     </tr>
@@ -141,17 +141,17 @@ export default function AdminPage() {
                     {leads.map((lead) => (
                       <tr
                         key={lead.id}
-                        className="border-b border-white/10 hover:bg-white/5"
+                        className="border-b border-lightgrey/50 hover:bg-softwhite"
                       >
-                        <td className="py-3 text-white">
+                        <td className="py-3 text-graphite">
                           {lead.name}
                           {lead.company_name && (
-                            <span className="text-gray-500 text-xs block">
+                            <span className="text-steel text-xs block">
                               {lead.company_name}
                             </span>
                           )}
                         </td>
-                        <td className="py-3 text-gray-400">
+                        <td className="py-3 text-steel">
                           <a
                             href={`mailto:${lead.email}`}
                             className="hover:text-primary-500 transition-colors"
@@ -159,7 +159,7 @@ export default function AdminPage() {
                             {lead.email}
                           </a>
                         </td>
-                        <td className="py-3 text-gray-500 text-xs">
+                        <td className="py-3 text-steel text-xs">
                           {formatDate(lead.created_at)}
                         </td>
                       </tr>
@@ -172,28 +172,28 @@ export default function AdminPage() {
 
           {/* Reports Table */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-white mb-4">
+            <h2 className="text-lg font-semibold text-graphite mb-4">
               Senaste Rapporter
             </h2>
             {reportsQuery.isLoading ? (
-              <p className="text-gray-500">Laddar...</p>
+              <p className="text-steel">Laddar...</p>
             ) : reports.length === 0 ? (
-              <p className="text-gray-500">Inga rapporter ännu</p>
+              <p className="text-steel">Inga rapporter ännu</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="text-left py-2 font-medium text-gray-400">
+                    <tr className="border-b border-lightgrey">
+                      <th className="text-left py-2 font-medium text-steel">
                         URL
                       </th>
-                      <th className="text-left py-2 font-medium text-gray-400">
+                      <th className="text-left py-2 font-medium text-steel">
                         Betyg
                       </th>
-                      <th className="text-left py-2 font-medium text-gray-400">
+                      <th className="text-left py-2 font-medium text-steel">
                         Lead
                       </th>
-                      <th className="text-left py-2 font-medium text-gray-400">
+                      <th className="text-left py-2 font-medium text-steel">
                         PDF
                       </th>
                     </tr>
@@ -202,27 +202,27 @@ export default function AdminPage() {
                     {reports.map((report) => (
                       <tr
                         key={report.id}
-                        className="border-b border-white/10 hover:bg-white/5"
+                        className="border-b border-lightgrey/50 hover:bg-softwhite"
                       >
                         <td className="py-3">
                           <a
                             href={report.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-primary-500 hover:text-primary-400 flex items-center gap-1 transition-colors"
+                            className="text-primary-500 hover:text-primary-600 flex items-center gap-1 transition-colors"
                           >
                             {new URL(report.url).hostname.replace('www.', '')}
                             <ExternalLink size={12} />
                           </a>
                           {report.company_name_detected && (
-                            <span className="text-gray-500 text-xs block">
+                            <span className="text-steel text-xs block">
                               {report.company_name_detected}
                             </span>
                           )}
                         </td>
                         <td className="py-3">
                           {report.overall_score !== null ? (
-                            <span className="flex items-center gap-1 text-white">
+                            <span className="flex items-center gap-1 text-graphite">
                               <Star
                                 size={14}
                                 className="text-primary-500 fill-primary-500"
@@ -230,25 +230,25 @@ export default function AdminPage() {
                               {report.overall_score}/5
                             </span>
                           ) : (
-                            <span className="text-gray-500">-</span>
+                            <span className="text-steel">-</span>
                           )}
                         </td>
-                        <td className="py-3 text-gray-400 text-xs">
+                        <td className="py-3 text-steel text-xs">
                           {report.lead_email || (
-                            <span className="text-gray-600">Ej konverterad</span>
+                            <span className="text-steel/50">Ej konverterad</span>
                           )}
                         </td>
                         <td className="py-3">
                           {report.access_token ? (
                             <a
                               href={`/api/report/${report.id}/pdf?token=${report.access_token}`}
-                              className="inline-flex items-center gap-1 px-2 py-1 bg-white/10 text-gray-300 rounded hover:bg-white/20 transition-colors"
+                              className="inline-flex items-center gap-1 px-2 py-1 bg-softwhite text-steel rounded hover:bg-lightgrey transition-colors border border-lightgrey"
                               title="Ladda ner PDF"
                             >
                               <Download size={14} />
                             </a>
                           ) : (
-                            <span className="text-gray-600">
+                            <span className="text-lightgrey">
                               <Download size={14} />
                             </span>
                           )}
@@ -264,28 +264,28 @@ export default function AdminPage() {
 
         {/* Widget Embed Code */}
         <div className="card mt-8">
-          <h2 className="text-lg font-semibold text-white mb-4">
+          <h2 className="text-lg font-semibold text-graphite mb-4">
             Inbäddningskod för Widget
           </h2>
-          <p className="text-gray-400 text-sm mb-4">
+          <p className="text-steel text-sm mb-4">
             Kopiera och klistra in denna kod på din webbsida för att visa analyswidgeten.
           </p>
-          <div className="bg-black/50 border border-white/10 rounded-lg p-4 overflow-x-auto">
-            <pre className="text-primary-400 text-sm">
+          <div className="bg-graphite rounded-lg p-4 overflow-x-auto">
+            <pre className="text-primary-300 text-sm">
 {`<!-- Conversion Analyzer Widget -->
 <div id="conversion-analyzer-widget"></div>
 <script>
   window.CAWidgetConfig = {
-    theme: 'dark',  // 'light' or 'dark'
-    primaryColor: '#10b981'
+    theme: 'light',
+    primaryColor: '#FF6A3D'
   };
 </script>
 <script src="${window.location.origin}/api/widget.js"></script>`}
             </pre>
           </div>
-          <p className="text-gray-500 text-xs mt-2">
+          <p className="text-steel text-xs mt-2">
             Eller använd iframe:{' '}
-            <code className="bg-white/10 px-1 rounded text-gray-300">
+            <code className="bg-softwhite px-1 rounded text-graphite border border-lightgrey">
               {`<iframe src="${window.location.origin}/widget/embed" width="500" height="400"></iframe>`}
             </code>
           </p>
@@ -307,10 +307,10 @@ function StatCard({
   color: 'blue' | 'green' | 'purple' | 'orange'
 }) {
   const colorClasses = {
-    blue: 'bg-blue-500/20 text-blue-400',
-    green: 'bg-primary-500/20 text-primary-500',
-    purple: 'bg-purple-500/20 text-purple-400',
-    orange: 'bg-orange-500/20 text-orange-400',
+    blue: 'bg-info/10 text-info',
+    green: 'bg-success/10 text-success',
+    purple: 'bg-purple-100 text-purple-600',
+    orange: 'bg-primary-50 text-primary-500',
   }
 
   return (
@@ -320,8 +320,8 @@ function StatCard({
           {icon}
         </div>
         <div>
-          <p className="text-sm text-gray-400">{title}</p>
-          <p className="text-2xl font-bold text-white">
+          <p className="text-sm text-steel">{title}</p>
+          <p className="text-2xl font-bold text-graphite">
             {value}
           </p>
         </div>
