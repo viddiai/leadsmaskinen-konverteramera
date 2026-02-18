@@ -50,7 +50,7 @@ class Settings(BaseSettings):
     # AI/Claude API settings
     ANTHROPIC_API_KEY: Optional[str] = None
     AI_ENABLED: bool = True
-    AI_MODEL: str = "claude-3-5-haiku-20241022"  # Fast and cost-effective
+    AI_MODEL: str = "claude-sonnet-4-5-20250929"  # Latest Sonnet - high quality
     AI_MAX_TOKENS: int = 1500
     AI_TEMPERATURE: float = 0.7
     AI_FALLBACK_ON_ERROR: bool = True  # Use static templates if AI fails
