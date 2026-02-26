@@ -26,9 +26,11 @@ export default function HomePage() {
     onSuccess: (data) => {
       setView('success')
       if (data.access_token && analysisData) {
-        const baseUrl = import.meta.env.VITE_API_URL || ''
+        const apiBase = import.meta.env.VITE_API_URL || ''
+        const reportUrl = `${apiBase}/report/${analysisData.report_id}?token=${data.access_token}`
+        const redirectTarget = `https://leadsmaskinen-website.vercel.app/konverteringsanalys/?report=${encodeURIComponent(reportUrl)}`
         setTimeout(() => {
-          window.location.href = `${baseUrl}/report/${analysisData.report_id}?token=${data.access_token}`
+          window.location.href = redirectTarget
         }, 1500)
       }
     },
@@ -45,24 +47,28 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-softwhite">
       {/* Hero Section */}
-      <header className="py-24 px-4 bg-white">
+      <header className="pt-16 pb-12 px-4 bg-softwhite">
         <div className="container mx-auto max-w-4xl text-center">
-          <p className="text-primary-500 font-semibold text-sm tracking-wide uppercase mb-4 animate-fade-slide-in">
-            Leadsmaskinen Konverteringsoptimerare
-          </p>
+          <span className="inline-block text-primary-500 font-semibold text-sm px-4 py-1.5 rounded-full border border-primary-100 bg-primary-50 mb-6 animate-fade-slide-in">
+            Gratis verktyg
+          </span>
           <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold mb-6 text-graphite animate-fade-slide-in leading-tight">
-            Analysera din webbsidas konverteringsförmåga
+            Testa din webbsidas konverteringsförmåga
           </h1>
           <p className="text-lg text-steel mb-10 max-w-2xl mx-auto leading-relaxed">
             Få en obarmhärtig analys av vad som hindrar din webbsida från att konvertera besökare till leads.
-            Ingen fluff &ndash; bara konkreta problem och lösningar.
           </p>
 
           {view === 'input' && (
-            <UrlInput
-              onSubmit={handleAnalyze}
-              isLoading={analyzeMutation.isPending}
-            />
+            <div className="card max-w-2xl mx-auto text-left">
+              <h2 className="text-lg font-bold text-graphite mb-4">
+                Analysera din webbsidas konverteringsförmåga
+              </h2>
+              <UrlInput
+                onSubmit={handleAnalyze}
+                isLoading={analyzeMutation.isPending}
+              />
+            </div>
           )}
 
           {analyzeMutation.isError && (

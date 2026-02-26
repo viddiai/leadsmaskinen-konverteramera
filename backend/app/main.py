@@ -81,92 +81,398 @@ REPORT_PAGE_TEMPLATE = '''
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Konverteringsrapport – Leadsmaskinen</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: {
-                            50: '#fff4f0',
-                            100: '#ffe8df',
-                            200: '#ffd0bf',
-                            300: '#ffb89f',
-                            400: '#ff916e',
-                            500: '#FF6A3D',
-                            600: '#e55a2f',
-                            700: '#cc4a21',
-                        },
-                        graphite: '#2B2F33',
-                        steel: '#6E7378',
-                        softwhite: '#FAFAFA',
-                        lightgrey: '#E7E7E7',
-                        success: '#2ECC71',
-                        warning: '#F4D03F',
-                        info: '#3498DB',
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-                        display: ['Poppins', 'system-ui', '-apple-system', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-        @keyframes scoreCount { from { opacity: 0; } to { opacity: 1; } }
-        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
-        .fade-in-delay-1 { animation: fadeIn 0.5s ease-out 0.1s forwards; opacity: 0; }
-        .fade-in-delay-2 { animation: fadeIn 0.5s ease-out 0.2s forwards; opacity: 0; }
-        .fade-in-delay-3 { animation: fadeIn 0.5s ease-out 0.3s forwards; opacity: 0; }
-        .scale-in { animation: scaleIn 0.4s ease-out forwards; }
-        .stars { font-size: 1.1em; letter-spacing: 2px; }
-        .stars-large { font-size: 1.8em; letter-spacing: 3px; }
-        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-        ::selection { background-color: rgba(255, 106, 61, 0.15); color: #FF6A3D; }
-        .score-ring { transition: stroke-dashoffset 1s ease-out; }
-        .section-card { background: white; border-radius: 16px; border: 1px solid #E7E7E7; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
-        .score-bar { height: 6px; border-radius: 3px; background: #E7E7E7; overflow: hidden; }
-        .score-bar-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease-out; }
-        .criteria-row { transition: background-color 0.15s ease; }
-        .criteria-row:hover { background-color: #FAFAFA; }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --orange: #FF6A3D;
+            --orange-light: #fff4f0;
+            --orange-border: #ffe8df;
+            --orange-hover: #e55a2f;
+            --graphite: #2B2F33;
+            --steel: #6E7378;
+            --softwhite: #FAFAFA;
+            --lightgrey: #E7E7E7;
+            --white: #FFFFFF;
+            --success: #2ECC71;
+            --warning: #F4D03F;
+            --danger: #e55a2f;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--softwhite);
+            color: var(--steel);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        ::selection { background: rgba(255,106,61,0.15); color: var(--orange); }
+
+        .container { max-width: 800px; margin: 0 auto; padding: 0 24px; }
+
+        /* Top bar */
+        .top-bar {
+            background: var(--graphite);
+            padding: 12px 0;
+        }
+        .top-bar-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .top-bar a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--white);
+            text-decoration: none;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+        }
+        .top-bar a:hover { color: var(--orange); }
+        .top-bar .label { font-family: 'Inter', sans-serif; font-size: 12px; color: #9ca3af; font-weight: 400; }
+
+        /* Loading & error */
+        .state-screen { text-align: center; padding: 96px 24px; }
+        .spinner {
+            width: 48px; height: 48px;
+            border: 4px solid var(--lightgrey);
+            border-top-color: var(--orange);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Hero */
+        .hero { padding: 48px 0 0; margin-bottom: 40px; }
+        .hero-grid { display: flex; gap: 32px; align-items: flex-start; }
+        .hero-content { flex: 1; }
+        .hero h1 {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 800;
+            font-size: 32px;
+            line-height: 1.2;
+            color: var(--graphite);
+            margin-bottom: 16px;
+        }
+        .meta-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 6px 12px;
+            border-radius: 100px;
+            border: 1px solid var(--lightgrey);
+            background: var(--white);
+            color: var(--steel);
+        }
+        .tag--orange {
+            background: var(--orange-light);
+            border-color: var(--orange-border);
+            color: var(--orange);
+            font-weight: 600;
+        }
+        .hero-url {
+            font-size: 14px;
+            color: var(--orange);
+            text-decoration: underline;
+            text-decoration-color: var(--orange-border);
+        }
+        .hero-url:hover { text-decoration-color: var(--orange); }
+
+        /* Score ring */
+        .score-wrap { flex-shrink: 0; text-align: center; }
+        .score-ring-svg { width: 136px; height: 136px; }
+        .score-ring-bg { fill: none; stroke: var(--lightgrey); stroke-width: 8; }
+        .score-ring-value { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 1s ease-out; }
+        .score-number { font-size: 28px; font-weight: 800; fill: var(--graphite); }
+        .score-sub { font-size: 11px; fill: var(--steel); }
+        .score-label {
+            display: block;
+            margin-top: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .score-issues { font-size: 12px; color: var(--steel); margin-top: 2px; }
+
+        /* Cards */
+        .card {
+            background: var(--white);
+            border: 1px solid var(--lightgrey);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+        .card h2 {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 20px;
+            color: var(--graphite);
+            margin-bottom: 16px;
+        }
+        .card p { color: var(--steel); font-size: 15px; line-height: 1.7; }
+
+        /* Insights card - orange left border */
+        .card--insight { border-left: 4px solid var(--orange); }
+        .card--insight .card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        /* Stats grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+        .stat-box {
+            background: var(--softwhite);
+            border: 1px solid var(--lightgrey);
+            border-radius: 12px;
+            padding: 16px;
+        }
+        .stat-box .stat-icon {
+            width: 32px; height: 32px;
+            background: var(--orange-light);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+        .stat-box .stat-label { font-size: 13px; font-weight: 600; color: var(--graphite); margin-bottom: 4px; }
+        .stat-box .stat-value { font-size: 24px; font-weight: 700; color: var(--graphite); }
+        .stat-box .stat-detail { font-size: 11px; color: var(--steel); margin-top: 4px; }
+
+        /* Criteria table */
+        .criteria-header {
+            display: grid;
+            grid-template-columns: 200px 120px 1fr;
+            gap: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--lightgrey);
+            margin-bottom: 4px;
+        }
+        .criteria-header span {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--steel);
+        }
+        .criteria-row {
+            display: grid;
+            grid-template-columns: 200px 120px 1fr;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--lightgrey);
+            transition: background 0.15s;
+        }
+        .criteria-row:last-child { border-bottom: none; }
+        .criteria-row:hover { background: var(--softwhite); margin: 0 -16px; padding-left: 16px; padding-right: 16px; border-radius: 8px; }
+        .criteria-name { font-size: 14px; font-weight: 600; color: var(--graphite); }
+        .criteria-score-col { display: flex; flex-direction: column; gap: 6px; }
+        .stars { font-size: 14px; letter-spacing: 2px; }
+        .star-filled { color: var(--orange); }
+        .star-empty { color: var(--lightgrey); }
+        .score-text { font-size: 11px; color: var(--steel); font-weight: 500; }
+        .score-bar { height: 4px; background: var(--lightgrey); border-radius: 2px; overflow: hidden; max-width: 80px; }
+        .score-bar-fill { height: 100%; border-radius: 2px; transition: width 0.8s ease-out; }
+        .criteria-explanation { font-size: 13px; color: var(--steel); line-height: 1.6; }
+
+        /* Summary assessment */
+        .assessment-item { display: flex; gap: 12px; align-items: flex-start; }
+        .assessment-item + .assessment-item { margin-top: 16px; padding-top: 16px; border-top: 1px solid #f3f4f6; }
+        .assessment-dot {
+            flex-shrink: 0;
+            width: 24px; height: 24px;
+            background: var(--orange-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 2px;
+        }
+        .assessment-dot::after {
+            content: '';
+            width: 8px; height: 8px;
+            background: var(--orange);
+            border-radius: 50%;
+        }
+        .assessment-item p { font-size: 14px; color: var(--steel); line-height: 1.7; }
+
+        /* Recommendations */
+        .card--recs {
+            background: linear-gradient(135deg, var(--orange-light) 0%, var(--white) 100%);
+            border-color: var(--orange-border);
+        }
+        .card--recs h2 { color: var(--orange-hover); }
+        .rec-list { list-style: none; }
+        .rec-item { display: flex; gap: 14px; align-items: flex-start; }
+        .rec-item + .rec-item { margin-top: 14px; }
+        .rec-num {
+            flex-shrink: 0;
+            width: 28px; height: 28px;
+            background: var(--orange);
+            color: var(--white);
+            font-size: 13px;
+            font-weight: 700;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 3px rgba(255,106,61,0.3);
+        }
+        .rec-item p { font-size: 14px; color: var(--steel); line-height: 1.6; padding-top: 3px; }
+
+        /* CTA section */
+        .cta-section {
+            background: var(--graphite);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: -80px; right: -80px;
+            width: 240px; height: 240px;
+            background: rgba(255,106,61,0.08);
+            border-radius: 50%;
+        }
+        .cta-section::after {
+            content: '';
+            position: absolute;
+            bottom: -60px; left: -60px;
+            width: 180px; height: 180px;
+            background: rgba(255,106,61,0.04);
+            border-radius: 50%;
+        }
+        .cta-section > * { position: relative; }
+        .cta-section h2 {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 800;
+            font-size: 26px;
+            color: var(--white);
+            margin-bottom: 12px;
+        }
+        .cta-section p { color: #d1d5db; font-size: 15px; line-height: 1.6; margin-bottom: 24px; max-width: 480px; }
+        .cta-buttons { display: flex; gap: 12px; flex-wrap: wrap; }
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 32px;
+            background: var(--orange);
+            color: var(--white);
+            font-weight: 700;
+            font-size: 15px;
+            border-radius: 12px;
+            text-decoration: none;
+            box-shadow: 0 4px 16px rgba(255,106,61,0.3);
+            transition: all 0.2s;
+        }
+        .btn-primary:hover { background: var(--orange-hover); transform: translateY(-1px); }
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 24px;
+            background: rgba(255,255,255,0.1);
+            color: var(--white);
+            font-weight: 500;
+            font-size: 14px;
+            border-radius: 12px;
+            text-decoration: none;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.2s;
+        }
+        .btn-secondary:hover { background: rgba(255,255,255,0.18); }
+
+        /* Footer */
+        .report-footer {
+            text-align: center;
+            padding: 32px 0;
+        }
+        .report-footer a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--steel);
+            text-decoration: none;
+            font-size: 13px;
+            transition: color 0.2s;
+        }
+        .report-footer a:hover { color: var(--orange); }
+
+        /* Animations */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-up { animation: fadeUp 0.5s ease-out forwards; }
+        .fade-up-1 { animation: fadeUp 0.5s ease-out 0.1s forwards; opacity: 0; }
+        .fade-up-2 { animation: fadeUp 0.5s ease-out 0.2s forwards; opacity: 0; }
+        .fade-up-3 { animation: fadeUp 0.5s ease-out 0.3s forwards; opacity: 0; }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 24px; }
+            .hero-grid { flex-direction: column; }
+            .score-wrap { align-self: center; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .criteria-header { display: none; }
+            .criteria-row {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+            .card { padding: 24px; }
+            .cta-section { padding: 32px 24px; }
+            .cta-buttons { flex-direction: column; }
+        }
     </style>
 </head>
-<body class="bg-softwhite min-h-screen text-steel">
-    <!-- Top brand bar -->
-    <div class="bg-graphite">
-        <div class="container mx-auto px-4 max-w-4xl">
-            <div class="flex items-center justify-between py-3">
-                <a href="https://leadsmaskinen.se" target="_blank" class="flex items-center gap-2 text-white hover:text-primary-400 transition-colors">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="24" height="24" rx="6" fill="#FF6A3D"/>
-                        <path d="M7 12L10.5 15.5L17 8.5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    <span class="font-display font-bold text-sm tracking-wide">LEADSMASKINEN</span>
+<body>
+    <!-- Top bar -->
+    <div class="top-bar">
+        <div class="container">
+            <div class="top-bar-inner">
+                <a href="https://leadsmaskinen.se" target="_blank">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="6" fill="#FF6A3D"/><path d="M7 12L10.5 15.5L17 8.5" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    LEADSMASKINEN
                 </a>
-                <span class="text-xs text-gray-400">Konverteringsanalys</span>
+                <span class="label">Konverteringsanalys</span>
             </div>
         </div>
     </div>
 
-    <div id="app" class="container mx-auto px-4 py-10 max-w-4xl">
-        <div id="loading" class="text-center py-24">
-            <div class="inline-block w-14 h-14 border-4 border-lightgrey border-t-primary-500 rounded-full animate-spin"></div>
-            <p class="mt-5 text-steel text-lg">Laddar din rapport...</p>
+    <div class="container">
+        <div id="loading" class="state-screen">
+            <div class="spinner"></div>
+            <p style="color:var(--steel);font-size:16px;">Laddar din rapport...</p>
         </div>
-        <div id="error" class="hidden text-center py-24">
-            <div class="w-20 h-20 bg-lightgrey rounded-full flex items-center justify-center mx-auto mb-5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#6E7378" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        <div id="error" class="state-screen" style="display:none;">
+            <div style="width:64px;height:64px;background:var(--lightgrey);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--steel)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
             </div>
-            <h2 class="text-2xl font-bold text-graphite mb-2">Ingen tillgang</h2>
-            <p class="text-steel max-w-md mx-auto" id="error-message"></p>
+            <h2 style="font-family:'Poppins',sans-serif;font-size:22px;font-weight:700;color:var(--graphite);margin-bottom:8px;">Ingen tillgång</h2>
+            <p id="error-message" style="color:var(--steel);max-width:400px;margin:0 auto;"></p>
         </div>
-        <div id="report" class="hidden"></div>
+        <div id="report" style="display:none;"></div>
     </div>
 
     <script>
@@ -189,7 +495,7 @@ REPORT_PAGE_TEMPLATE = '''
             const token = new URLSearchParams(window.location.search).get('token');
 
             if (!token) {
-                showError('Ingen atkomsttoken angiven');
+                showError('Ingen åtkomsttoken angiven');
                 return;
             }
 
@@ -212,12 +518,10 @@ REPORT_PAGE_TEMPLATE = '''
 
                 if (!data.ai_generated && pollCount < MAX_POLLS) {
                     pollCount++;
-                    setTimeout(() => {
-                        refreshReport(reportId, token);
-                    }, 2000);
+                    setTimeout(() => { refreshReport(reportId, token); }, 2000);
                 }
             } catch (err) {
-                showError('Nagot gick fel: ' + err.message);
+                showError('Något gick fel: ' + err.message);
             }
         }
 
@@ -227,12 +531,9 @@ REPORT_PAGE_TEMPLATE = '''
                 if (response.ok) {
                     const data = await response.json();
                     renderReport(data);
-
                     if (!data.ai_generated && pollCount < MAX_POLLS) {
                         pollCount++;
-                        setTimeout(() => {
-                            refreshReport(reportId, token);
-                        }, 2000);
+                        setTimeout(() => { refreshReport(reportId, token); }, 2000);
                     }
                 }
             } catch (err) {
@@ -241,8 +542,8 @@ REPORT_PAGE_TEMPLATE = '''
         }
 
         function showError(message) {
-            document.getElementById('loading').classList.add('hidden');
-            document.getElementById('error').classList.remove('hidden');
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = '';
             document.getElementById('error-message').textContent = message;
         }
 
@@ -255,243 +556,189 @@ REPORT_PAGE_TEMPLATE = '''
 
         function getScoreLabel(score) {
             if (score >= 4) return 'Bra';
-            if (score >= 3) return 'Godkant';
+            if (score >= 3) return 'Godkänt';
             if (score >= 2) return 'Svagt';
             return 'Kritiskt';
         }
 
-        function renderReport(data) {
-            document.getElementById('loading').classList.add('hidden');
-            const container = document.getElementById('report');
-            container.classList.remove('hidden');
+        function renderStars(score) {
+            const filled = Math.round(score);
+            let html = '<span class="stars">';
+            for (let i = 0; i < 5; i++) {
+                html += i < filled
+                    ? '<span class="star-filled">&#9733;</span>'
+                    : '<span class="star-empty">&#9734;</span>';
+            }
+            html += '</span>';
+            return html;
+        }
 
-            const stars = (score) => {
-                const filled = Math.round(score);
-                const empty = 5 - filled;
-                const color = getScoreColor(score);
-                const filledStars = '<span style="color:' + color + '">' + '&#9733;'.repeat(filled) + '</span>';
-                const emptyStars = '<span class="text-lightgrey">' + '&#9734;'.repeat(empty) + '</span>';
-                return '<span class="stars">' + filledStars + emptyStars + '</span>';
-            };
+        function renderReport(data) {
+            document.getElementById('loading').style.display = 'none';
+            const container = document.getElementById('report');
+            container.style.display = '';
 
             const scorePercent = Math.round((data.overall_score / 5) * 100);
             const scoreColor = getScoreColor(data.overall_score);
             const circumference = 2 * Math.PI * 54;
             const dashOffset = circumference - (scorePercent / 100) * circumference;
-
             const criteriaExplanations = data.criteria_explanations || {};
 
             container.innerHTML = `
-                <div class="fade-in">
-                    <!-- Hero header -->
-                    <header class="mb-12">
-                        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-8">
-                            <div class="flex-1">
-                                <h1 class="font-display text-3xl md:text-4xl font-extrabold text-graphite leading-tight mb-4">
-                                    Konverteringsanalys for<br>${escapeHtml(data.company_name) || 'Er Webbsida'}
-                                </h1>
-                                <div class="flex flex-wrap items-center gap-3 mb-3">
-                                    ${data.industry_label ? `<span class="inline-flex items-center gap-1.5 bg-primary-50 text-primary-600 text-xs font-semibold px-3 py-1.5 rounded-full border border-primary-100">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                                        ${escapeHtml(data.industry_label)}
-                                    </span>` : ''}
-                                    <span class="inline-flex items-center gap-1.5 bg-white text-steel text-xs font-medium px-3 py-1.5 rounded-full border border-lightgrey">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                                        ${new Date(data.created_at).toLocaleDateString('sv-SE')}
-                                    </span>
-                                </div>
-                                <a href="${escapeHtml(data.url)}" target="_blank" class="text-sm text-primary-500 hover:text-primary-600 transition-colors underline decoration-primary-200 hover:decoration-primary-400">${escapeHtml(data.url)}</a>
+                <div class="fade-up">
+                <!-- Hero -->
+                <div class="hero">
+                    <div class="hero-grid">
+                        <div class="hero-content">
+                            <h1>Konverteringsanalys för<br>${escapeHtml(data.company_name) || 'Er Webbsida'}</h1>
+                            <div class="meta-tags">
+                                ${data.industry_label ? '<span class="tag tag--orange"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>' + escapeHtml(data.industry_label) + '</span>' : ''}
+                                <span class="tag"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${new Date(data.created_at).toLocaleDateString('sv-SE')}</span>
                             </div>
-                            <!-- Score circle -->
-                            <div class="scale-in flex-shrink-0 flex flex-col items-center">
-                                <div class="relative w-36 h-36">
-                                    <svg class="w-36 h-36 -rotate-90" viewBox="0 0 120 120">
-                                        <circle cx="60" cy="60" r="54" fill="none" stroke="#E7E7E7" stroke-width="8"/>
-                                        <circle cx="60" cy="60" r="54" fill="none" stroke="${scoreColor}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${circumference}" stroke-dashoffset="${dashOffset}" class="score-ring"/>
-                                    </svg>
-                                    <div class="absolute inset-0 flex flex-col items-center justify-center">
-                                        <span class="text-3xl font-extrabold text-graphite">${data.overall_score.toFixed(1)}</span>
-                                        <span class="text-xs text-steel">av 5.0</span>
-                                    </div>
-                                </div>
-                                <span class="mt-2 text-xs font-semibold uppercase tracking-wider" style="color: ${scoreColor}">${getScoreLabel(data.overall_score)}</span>
-                                <span class="text-xs text-steel mt-0.5">${data.issues_count} problem identifierade</span>
-                            </div>
+                            <a href="${escapeHtml(data.url)}" target="_blank" class="hero-url">${escapeHtml(data.url)}</a>
                         </div>
-                    </header>
-
-                    <!-- Kort beskrivning -->
-                    <section class="section-card p-6 md:p-8 mb-6 fade-in-delay-1">
-                        <h2 class="font-display text-xl font-bold text-graphite mb-3">Sammanfattning</h2>
-                        <p class="text-steel leading-relaxed text-base">${escapeHtml(data.short_description || data.company_description) || 'Ingen beskrivning tillganglig.'}</p>
-                    </section>
-
-                    <!-- Resultat: Leadmagneter, formular och innehall -->
-                    <section class="section-card p-6 md:p-8 mb-6 fade-in-delay-2">
-                        <h2 class="font-display text-xl font-bold text-graphite mb-5">Identifierade element</h2>
-
-                        ${data.lead_magnets_analysis ? `
-                        <p class="text-steel leading-relaxed mb-5">${escapeHtml(data.lead_magnets_analysis)}</p>
-                        ` : `
-                        <p class="text-steel mb-5">${escapeHtml(data.company_name) || 'Webbplatsen'} har ${data.lead_magnets?.length || 0} identifierade leadmagneter.</p>
-                        `}
-
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
-                            <div class="bg-softwhite rounded-xl p-4 border border-lightgrey">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <div class="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF6A3D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                                    </div>
-                                    <span class="text-sm font-semibold text-graphite">Leadmagneter</span>
-                                </div>
-                                <p class="text-2xl font-bold text-graphite">${data.lead_magnets?.length || 0}</p>
-                                <p class="text-xs text-steel mt-1">${escapeHtml((data.lead_magnets || []).slice(0, 2).map(lm => lm.text || '').filter(Boolean).join(', ')) || 'Inga hittades'}</p>
-                            </div>
-                            <div class="bg-softwhite rounded-xl p-4 border border-lightgrey">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <div class="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF6A3D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="2" y1="9" x2="22" y2="9"/><line x1="10" y1="3" x2="10" y2="21"/></svg>
-                                    </div>
-                                    <span class="text-sm font-semibold text-graphite">Formular</span>
-                                </div>
-                                <p class="text-2xl font-bold text-graphite">${data.forms?.length || 0}</p>
-                                <p class="text-xs text-steel mt-1">st identifierade</p>
-                            </div>
-                            <div class="bg-softwhite rounded-xl p-4 border border-lightgrey">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <div class="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF6A3D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-                                    </div>
-                                    <span class="text-sm font-semibold text-graphite">CTAs</span>
-                                </div>
-                                <p class="text-2xl font-bold text-graphite">${data.cta_buttons?.length || 0}</p>
-                                <p class="text-xs text-steel mt-1">${escapeHtml((data.cta_buttons || []).slice(0, 2).map(c => c.text || '').filter(Boolean).join(', ')) || 'Inga hittades'}</p>
-                            </div>
-                        </div>
-
-                        ${data.forms_analysis ? `<p class="text-steel leading-relaxed mb-3">${escapeHtml(data.forms_analysis)}</p>` : ''}
-                        ${data.cta_analysis ? `<p class="text-steel leading-relaxed">${escapeHtml(data.cta_analysis)}</p>` : ''}
-                    </section>
-
-                    <!-- Avgorande insikter -->
-                    <section class="section-card p-6 md:p-8 mb-6 fade-in-delay-3 border-l-4 border-l-primary-500">
-                        <div class="flex items-center gap-2 mb-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6A3D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                            <h2 class="font-display text-xl font-bold text-graphite">Avgorande insikter</h2>
-                        </div>
-                        <div class="text-steel leading-relaxed whitespace-pre-line text-base">
-                            ${data.logical_verdict ? escapeHtml(data.logical_verdict) : (data.ai_generated ? 'Ingen detaljerad analys tillganglig.' : '<div class="flex items-center gap-2 text-steel"><svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Genererar AI-analys...</div>')}
-                        </div>
-                    </section>
-
-                    <!-- Konverteringsanalys -->
-                    <section class="section-card p-6 md:p-8 mb-6">
-                        <h2 class="font-display text-xl font-bold text-graphite mb-6">Konverteringsanalys</h2>
-                        <div class="space-y-0">
-                            <!-- Table header -->
-                            <div class="hidden md:grid md:grid-cols-12 gap-4 pb-3 border-b border-lightgrey mb-1">
-                                <div class="col-span-3 text-xs font-semibold text-steel uppercase tracking-wider">Kriterium</div>
-                                <div class="col-span-2 text-xs font-semibold text-steel uppercase tracking-wider">Betyg</div>
-                                <div class="col-span-7 text-xs font-semibold text-steel uppercase tracking-wider">Analys</div>
-                            </div>
-                            ${(data.criteria_analysis || []).map(c => {
-                                const criterionKey = c.criterion.toLowerCase().replace(/_/g, '_');
-                                const aiExplanation = criteriaExplanations[criterionKey] || criteriaExplanations[c.criterion] || c.explanation;
-                                const barWidth = (c.score / 5) * 100;
-                                const barColor = getScoreColor(c.score);
-                                return `
-                                <div class="criteria-row py-4 border-b border-lightgrey last:border-0 md:grid md:grid-cols-12 gap-4">
-                                    <div class="col-span-3 mb-2 md:mb-0">
-                                        <span class="font-semibold text-graphite text-sm">${escapeHtml(c.criterion_label)}</span>
-                                    </div>
-                                    <div class="col-span-2 mb-2 md:mb-0 flex flex-col gap-1.5">
-                                        <div class="flex items-center gap-2">
-                                            ${stars(c.score)}
-                                            <span class="text-xs font-medium text-steel">${c.score}/5</span>
-                                        </div>
-                                        <div class="score-bar w-full max-w-[100px]">
-                                            <div class="score-bar-fill" style="width: ${barWidth}%; background-color: ${barColor}"></div>
-                                        </div>
-                                    </div>
-                                    <div class="col-span-7">
-                                        <p class="text-steel text-sm leading-relaxed">${escapeHtml(aiExplanation)}</p>
-                                    </div>
-                                </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    </section>
-
-                    <!-- Sammanfattande bedomning -->
-                    <section class="section-card p-6 md:p-8 mb-6">
-                        <h2 class="font-display text-xl font-bold text-graphite mb-5">Sammanfattande bedomning</h2>
-                        <div class="space-y-4">
-                            ${(data.summary_assessment || 'Ingen sammanfattning tillganglig.').split(String.fromCharCode(10)).filter(line => line.trim()).map((line, i) => `
-                            <div class="flex items-start gap-3 ${i > 0 ? 'pt-4 border-t border-lightgrey/50' : ''}">
-                                <div class="w-6 h-6 rounded-full bg-primary-50 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                    <div class="w-2 h-2 bg-primary-500 rounded-full"></div>
-                                </div>
-                                <p class="text-steel leading-relaxed text-sm">${escapeHtml(line.trim())}</p>
-                            </div>
-                            `).join('')}
-                        </div>
-                    </section>
-
-                    <!-- Rekommendationer -->
-                    <section class="section-card p-6 md:p-8 mb-6 bg-gradient-to-br from-primary-50 to-white border-primary-100">
-                        <div class="flex items-center gap-2 mb-5">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6A3D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                            <h2 class="font-display text-xl font-bold text-primary-700">Rekommendationer</h2>
-                        </div>
-                        <ol class="space-y-4">
-                            ${(data.recommendations || []).map((r, i) => `
-                            <li class="flex gap-4 items-start">
-                                <span class="flex-shrink-0 w-7 h-7 bg-primary-500 text-white rounded-lg flex items-center justify-center text-sm font-bold shadow-sm">${i + 1}</span>
-                                <p class="text-steel text-sm leading-relaxed pt-0.5">${escapeHtml(r)}</p>
-                            </li>
-                            `).join('')}
-                        </ol>
-                    </section>
-
-                    <!-- Nasta steg CTA -->
-                    <section class="relative overflow-hidden rounded-2xl mb-8 bg-graphite p-8 md:p-10">
-                        <div class="absolute top-0 right-0 w-64 h-64 bg-primary-500/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                        <div class="absolute bottom-0 left-0 w-48 h-48 bg-primary-500/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
-                        <div class="relative">
-                            <h2 class="font-display text-2xl md:text-3xl font-extrabold text-white mb-3">
-                                Redo att fixa luckorna?
-                            </h2>
-                            <p class="text-gray-300 leading-relaxed mb-6 max-w-lg">
-                                Vi har identifierat ${data.issues_count} problem som hindrar er fran att maximera konverteringen. Boka en kostnadsfri genomgang for att se exakt hur ni kan atgarda dem.
-                            </p>
-                            <div class="flex flex-col sm:flex-row gap-3">
-                                <a href="https://calendly.com/stefan-245/30min"
-                                   target="_blank"
-                                   class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary-500 text-white font-bold rounded-xl hover:bg-primary-600 transition-all shadow-lg shadow-primary-500/30 text-base hover:-translate-y-0.5">
-                                    Boka genomgang
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                                </a>
-                                <a href="/api/report/${data.report_id}/pdf?token=${new URLSearchParams(window.location.search).get('token')}"
-                                   class="inline-flex items-center justify-center gap-2 px-6 py-4 bg-white/10 text-white font-medium rounded-xl hover:bg-white/20 transition-all text-sm border border-white/20">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                    Ladda ner som PDF
-                                </a>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Footer -->
-                    <footer class="text-center py-8">
-                        <a href="https://leadsmaskinen.se" target="_blank" class="inline-flex items-center gap-2 text-steel hover:text-primary-500 transition-colors text-sm">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <rect width="24" height="24" rx="6" fill="#FF6A3D"/>
-                                <path d="M7 12L10.5 15.5L17 8.5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <div class="score-wrap">
+                            <svg class="score-ring-svg" viewBox="0 0 120 120" style="transform:rotate(-90deg);">
+                                <circle class="score-ring-bg" cx="60" cy="60" r="54"/>
+                                <circle class="score-ring-value" cx="60" cy="60" r="54" stroke="${scoreColor}" stroke-dasharray="${circumference}" stroke-dashoffset="${dashOffset}"/>
                             </svg>
-                            Genererad av Leadsmaskinen
+                            <svg viewBox="0 0 120 120" style="position:absolute;width:136px;height:136px;top:0;left:50%;transform:translateX(-50%);">
+                                <text x="60" y="56" text-anchor="middle" class="score-number">${data.overall_score.toFixed(1)}</text>
+                                <text x="60" y="72" text-anchor="middle" class="score-sub">av 5.0</text>
+                            </svg>
+                            <span class="score-label" style="color:${scoreColor}">${getScoreLabel(data.overall_score)}</span>
+                            <span class="score-issues">${data.issues_count} problem identifierade</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sammanfattning -->
+                <div class="card fade-up-1">
+                    <h2>Sammanfattning</h2>
+                    <p>${escapeHtml(data.short_description || data.company_description) || 'Ingen beskrivning tillgänglig.'}</p>
+                </div>
+
+                <!-- Identifierade element -->
+                <div class="card fade-up-2">
+                    <h2>Identifierade element</h2>
+                    ${data.lead_magnets_analysis ? '<p style="margin-bottom:16px;">' + escapeHtml(data.lead_magnets_analysis) + '</p>' : '<p style="margin-bottom:16px;">' + (escapeHtml(data.company_name) || 'Webbplatsen') + ' har ' + (data.lead_magnets?.length || 0) + ' identifierade leadmagneter.</p>'}
+
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF6A3D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            </div>
+                            <div class="stat-label">Leadmagneter</div>
+                            <div class="stat-value">${data.lead_magnets?.length || 0}</div>
+                            <div class="stat-detail">${escapeHtml((data.lead_magnets || []).slice(0, 2).map(lm => lm.text || '').filter(Boolean).join(', ')) || 'Inga hittades'}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF6A3D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="2" y1="9" x2="22" y2="9"/><line x1="10" y1="3" x2="10" y2="21"/></svg>
+                            </div>
+                            <div class="stat-label">Formulär</div>
+                            <div class="stat-value">${data.forms?.length || 0}</div>
+                            <div class="stat-detail">st identifierade</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF6A3D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                            </div>
+                            <div class="stat-label">CTAs</div>
+                            <div class="stat-value">${data.cta_buttons?.length || 0}</div>
+                            <div class="stat-detail">${escapeHtml((data.cta_buttons || []).slice(0, 2).map(c => c.text || '').filter(Boolean).join(', ')) || 'Inga hittades'}</div>
+                        </div>
+                    </div>
+
+                    ${data.forms_analysis ? '<p style="margin-bottom:8px;">' + escapeHtml(data.forms_analysis) + '</p>' : ''}
+                    ${data.cta_analysis ? '<p>' + escapeHtml(data.cta_analysis) + '</p>' : ''}
+                </div>
+
+                <!-- Avgörande insikter -->
+                <div class="card card--insight fade-up-3">
+                    <div class="card-header">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6A3D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        <h2 style="margin-bottom:0;">Avgörande insikter</h2>
+                    </div>
+                    <p style="white-space:pre-line;">
+                        ${data.logical_verdict ? escapeHtml(data.logical_verdict) : (data.ai_generated ? 'Ingen detaljerad analys tillgänglig.' : '<span style="display:inline-flex;align-items:center;gap:8px;color:var(--steel)"><span class="spinner" style="width:16px;height:16px;border-width:2px;margin:0;"></span> Genererar AI-analys...</span>')}
+                    </p>
+                </div>
+
+                <!-- Konverteringsanalys -->
+                <div class="card">
+                    <h2>Konverteringsanalys</h2>
+                    <div class="criteria-header">
+                        <span>Kriterium</span>
+                        <span>Betyg</span>
+                        <span>Analys</span>
+                    </div>
+                    ${(data.criteria_analysis || []).map(c => {
+                        const criterionKey = c.criterion.toLowerCase().replace(/_/g, '_');
+                        const aiExplanation = criteriaExplanations[criterionKey] || criteriaExplanations[c.criterion] || c.explanation;
+                        const barWidth = (c.score / 5) * 100;
+                        const barColor = getScoreColor(c.score);
+                        return '<div class="criteria-row">' +
+                            '<div class="criteria-name">' + escapeHtml(c.criterion_label) + '</div>' +
+                            '<div class="criteria-score-col">' +
+                                '<div>' + renderStars(c.score) + ' <span class="score-text">' + c.score + '/5</span></div>' +
+                                '<div class="score-bar"><div class="score-bar-fill" style="width:' + barWidth + '%;background:' + barColor + '"></div></div>' +
+                            '</div>' +
+                            '<div class="criteria-explanation">' + escapeHtml(aiExplanation) + '</div>' +
+                        '</div>';
+                    }).join('')}
+                </div>
+
+                <!-- Sammanfattande bedömning -->
+                <div class="card">
+                    <h2>Sammanfattande bedömning</h2>
+                    ${(data.summary_assessment || 'Ingen sammanfattning tillgänglig.').split(String.fromCharCode(10)).filter(line => line.trim()).map(line =>
+                        '<div class="assessment-item"><div class="assessment-dot"></div><p>' + escapeHtml(line.trim()) + '</p></div>'
+                    ).join('')}
+                </div>
+
+                <!-- Rekommendationer -->
+                <div class="card card--recs">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6A3D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                        <h2 style="margin-bottom:0;">Rekommendationer</h2>
+                    </div>
+                    <ol class="rec-list">
+                        ${(data.recommendations || []).map((r, i) =>
+                            '<li class="rec-item"><span class="rec-num">' + (i + 1) + '</span><p>' + escapeHtml(r) + '</p></li>'
+                        ).join('')}
+                    </ol>
+                </div>
+
+                <!-- CTA -->
+                <div class="cta-section">
+                    <h2>Redo att fixa luckorna?</h2>
+                    <p>Vi har identifierat ${data.issues_count} problem som hindrar er från att maximera konverteringen. Boka en kostnadsfri genomgång för att se exakt hur ni kan åtgärda dem.</p>
+                    <div class="cta-buttons">
+                        <a href="https://calendly.com/stefan-245/30min" target="_blank" class="btn-primary">
+                            Boka genomgång
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                         </a>
-                    </footer>
+                        <a href="/api/report/${data.report_id}/pdf?token=${new URLSearchParams(window.location.search).get('token')}" class="btn-secondary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Ladda ner som PDF
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <footer class="report-footer">
+                    <a href="https://leadsmaskinen.se" target="_blank">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="6" fill="#FF6A3D"/><path d="M7 12L10.5 15.5L17 8.5" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        Genererad av Leadsmaskinen
+                    </a>
+                </footer>
                 </div>
             `;
+
+            /* Fix score-wrap relative positioning for overlapping SVGs */
+            const wrap = container.querySelector('.score-wrap');
+            if (wrap) wrap.style.position = 'relative';
         }
 
         loadReport();
