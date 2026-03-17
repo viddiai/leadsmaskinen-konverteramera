@@ -28,9 +28,8 @@ export default function HomePage() {
       if (data.access_token && analysisData) {
         const apiBase = import.meta.env.VITE_API_URL || ''
         const reportUrl = `${apiBase}/report/${analysisData.report_id}?token=${data.access_token}`
-        const redirectTarget = `https://leadsmaskinen-website.vercel.app/konverteringsanalys/?report=${encodeURIComponent(reportUrl)}`
         setTimeout(() => {
-          window.location.href = redirectTarget
+          window.location.href = reportUrl
         }, 1500)
       }
     },
