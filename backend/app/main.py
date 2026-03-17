@@ -1,5 +1,6 @@
 """
 FastAPI main application entry point.
+v1.1 – light brand theme
 """
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
