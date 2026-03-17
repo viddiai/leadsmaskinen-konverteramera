@@ -354,7 +354,7 @@ def _build_report_html(data: Dict[str, Any]) -> str:
         </div>
 
         <div class="footer">
-            <p>Genererad av Portalfabriken.se</p>
+            <p>Genererad av <a href="https://leadsmaskinen.io" style="color: inherit;">Leadsmaskinen.io</a></p>
             <p>Rapport-ID: {data.get('report_id', 'N/A')} | {formatted_date}</p>
         </div>
     </body>
