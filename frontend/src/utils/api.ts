@@ -10,10 +10,11 @@ import type {
 } from './types'
 
 // I produktion: VITE_API_URL pekar på Railway backend
-// I utveckling: /api proxas via Vite till localhost:8000
-const API_BASE_URL = import.meta.env.VITE_API_URL
-  ? `${import.meta.env.VITE_API_URL}/api`
-  : '/api'
+// I utveckling: VITE_API_URL sätts i .env.development till http://localhost:8000
+// Backend-origin utan /api — för länkar som renderas direkt i DOM (PDF, widget, rapport)
+export const BACKEND_ORIGIN = import.meta.env.VITE_API_URL || ''
+
+const API_BASE_URL = BACKEND_ORIGIN ? `${BACKEND_ORIGIN}/api` : '/api'
 
 const api = axios.create({
   baseURL: API_BASE_URL,

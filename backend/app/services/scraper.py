@@ -3,11 +3,30 @@ Web scraping service for fetching and parsing web pages.
 """
 import re
 import asyncio
+import logging
 from typing import Dict, List, Any, Optional
 from urllib.parse import urljoin, urlparse
 import httpx
 from bs4 import BeautifulSoup, Tag
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
+
+# Under denna mängd synlig text betraktas sidan som JS-renderad/tom
+MIN_VISIBLE_TEXT = 200
+
+
+def contains_keyword(text: str, keywords) -> bool:
+    """
+    Match keywords as whole words/phrases instead of substrings,
+    so "hem" doesn't match "hemleverans" and "få" doesn't match "får".
+    """
+    if not text:
+        return False
+    return any(
+        re.search(r"(?<!\w)" + re.escape(kw) + r"(?!\w)", text)
+        for kw in keywords
+    )
 
 
 class WebScraper:
@@ -51,6 +70,55 @@ class WebScraper:
                 "status_code": response.status_code,
                 "content_type": response.headers.get("content-type", ""),
             }
+
+    async def render_page(self, url: str) -> Dict[str, Any]:
+        """
+        Render page with headless Chromium (Playwright) and parse the
+        resulting DOM. Used as fallback for JS-rendered sites where a plain
+        HTTP fetch returns a near-empty <body>.
+        """
+        from playwright.async_api import async_playwright
+
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(
+                headless=True,
+                # Krävs i containermiljöer som Railway
+                args=["--no-sandbox", "--disable-dev-shm-usage"],
+            )
+            try:
+                context = await browser.new_context(
+                    user_agent=self.headers["User-Agent"],
+                    locale="sv-SE",
+                    ignore_https_errors=True,
+                )
+                page = await context.new_page()
+                await page.goto(
+                    url,
+                    wait_until="domcontentloaded",
+                    timeout=settings.JS_RENDER_TIMEOUT * 1000,
+                )
+                # Vänta in nätverksro om möjligt, men ge upp tyst — sidor med
+                # long-polling/analytics blir aldrig helt tysta
+                try:
+                    await page.wait_for_load_state("networkidle", timeout=5000)
+                except Exception:
+                    pass
+                html = await page.content()
+                final_url = page.url
+            finally:
+                await browser.close()
+
+        if len(html.encode("utf-8", errors="ignore")) > settings.MAX_PAGE_SIZE:
+            raise ValueError(f"Page too large after rendering: {len(html)} chars")
+
+        soup = BeautifulSoup(html, "html.parser")
+        return {
+            "html": html,
+            "soup": soup,
+            "url": final_url,
+            "status_code": 200,
+            "content_type": "text/html",
+        }
 
     def extract_company_info(self, soup: BeautifulSoup, url: str) -> Dict[str, Any]:
         """
@@ -134,7 +202,7 @@ class WebScraper:
 
             # Check link text
             for keyword in keywords:
-                if keyword in text:
+                if contains_keyword(text, [keyword]):
                     is_lead_magnet = True
                     magnet_type = keyword
                     break
@@ -158,17 +226,18 @@ class WebScraper:
     def _is_gated(self, element: Tag) -> bool:
         """
         Check if a link/element is behind a form (gated content).
+        Endast förfäder räknas — ett orelaterat formulär någon annanstans
+        i samma sektion (sök, nyhetsbrev) gör inte länken gated.
         """
-        # Check if there's a nearby form
         parent = element.parent
         for _ in range(5):  # Check up to 5 levels up
             if parent is None:
                 break
-            if parent.find("form"):
+            if parent.name == "form":
                 return True
             # Check for common modal/popup classes
-            classes = parent.get("class", [])
-            if any(c in str(classes).lower() for c in ["modal", "popup", "gate", "form"]):
+            classes = " ".join(parent.get("class", [])).lower()
+            if any(c in classes for c in ["modal", "popup", "gate"]):
                 return True
             parent = parent.parent
         return False
@@ -198,7 +267,8 @@ class WebScraper:
                 inp_name = inp.get("name", "").lower()
                 inp_placeholder = inp.get("placeholder", "").lower()
 
-                if inp_type == "hidden":
+                # Knappar och dolda fält är inte formulärfält som besökaren fyller i
+                if inp_type in ("hidden", "submit", "button", "reset", "image"):
                     continue
 
                 field_info = {
@@ -262,11 +332,9 @@ class WebScraper:
 
             is_cta = False
 
-            # Check text for CTA keywords
-            for keyword in cta_keywords:
-                if keyword in text:
-                    is_cta = True
-                    break
+            # Check text for CTA keywords (whole words only)
+            if contains_keyword(text, cta_keywords):
+                is_cta = True
 
             # Check for button-like classes
             if not is_cta and any(c in classes for c in ["btn", "button", "cta"]):
@@ -399,10 +467,10 @@ class WebScraper:
             "has_subheadline": False,
         }
 
-        # Find H1
+        # Find H1 (separator så nästlade spans inte klistras ihop till ett ord)
         h1 = soup.find("h1")
         if h1:
-            result["h1"] = h1.get_text(strip=True)
+            result["h1"] = re.sub(r"\s+", " ", h1.get_text(" ", strip=True))
             result["h1_length"] = len(result["h1"])
 
         # Look for hero section
@@ -411,7 +479,7 @@ class WebScraper:
             classes = " ".join(elem.get("class", [])).lower()
             if any(k in classes for k in hero_keywords):
                 result["has_hero"] = True
-                result["hero_text"] = elem.get_text(strip=True)[:300]
+                result["hero_text"] = re.sub(r"\s+", " ", elem.get_text(" ", strip=True))[:300]
                 break
 
         # Check for subheadline (H2 or prominent paragraph after H1)
@@ -419,7 +487,7 @@ class WebScraper:
             next_elem = h1.find_next_sibling(["h2", "p"])
             if next_elem:
                 result["has_subheadline"] = True
-                result["subheadline"] = next_elem.get_text(strip=True)[:150]
+                result["subheadline"] = re.sub(r"\s+", " ", next_elem.get_text(" ", strip=True))[:150]
 
         return result
 
@@ -479,7 +547,7 @@ class WebScraper:
 
         for elem in soup.find_all(["a", "button", "span", "div"]):
             text = elem.get_text(strip=True).lower()
-            if any(kw in text for kw in free_keywords) and len(text) < 100:
+            if contains_keyword(text, free_keywords) and len(text) < 100:
                 result["has_free_offer"] = True
                 result["free_offers"].append({
                     "text": elem.get_text(strip=True),
@@ -496,6 +564,27 @@ class WebScraper:
         page_data = await self.fetch_page(url)
         soup = page_data["soup"]
         final_url = page_data["url"]
+
+        # Guard: en nästan tom sida är troligen JavaScript-renderad — försök
+        # då rendera den med headless Chromium innan vi ger upp. En analys av
+        # en tom sida skulle ge lägsta poäng på alla kriterier, vilket är
+        # missvisande.
+        visible_text = soup.get_text(" ", strip=True)
+        if len(visible_text) < MIN_VISIBLE_TEXT and settings.JS_RENDER_ENABLED:
+            logger.info(f"Thin static content for {url} — falling back to headless rendering")
+            try:
+                page_data = await self.render_page(url)
+                soup = page_data["soup"]
+                final_url = page_data["url"]
+                visible_text = soup.get_text(" ", strip=True)
+            except Exception as e:
+                logger.warning(f"Headless rendering failed for {url}: {e}")
+
+        if len(visible_text) < MIN_VISIBLE_TEXT:
+            raise ValueError(
+                "Sidan innehåller för lite läsbart innehåll för en tillförlitlig analys, "
+                "även efter rendering. Kontrollera att adressen går till en publik sida med innehåll."
+            )
 
         # Extract all elements
         return {

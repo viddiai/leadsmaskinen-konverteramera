@@ -43,6 +43,8 @@ class Settings(BaseSettings):
     # Analysis
     SCRAPE_TIMEOUT: int = 30  # seconds
     MAX_PAGE_SIZE: int = 5_000_000  # 5MB max page size
+    JS_RENDER_ENABLED: bool = True  # Rendera JS-sajter med headless Chromium vid behov
+    JS_RENDER_TIMEOUT: int = 20  # seconds för headless-rendering
 
     # Widget
     WIDGET_ALLOWED_DOMAINS: str = "*"  # Comma-separated, or * for all

@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query'
 import { UrlInput } from '../components/UrlInput'
 import { AnalysisResult } from '../components/AnalysisResult'
 import { LeadForm } from '../components/LeadForm'
-import { analyzeUrl, submitLead } from '../utils/api'
+import { analyzeUrl, submitLead, BACKEND_ORIGIN } from '../utils/api'
 import type { AnalyzeResponse, LeadRequest } from '../utils/types'
 import { BarChart2, Target, TrendingUp } from 'lucide-react'
 
@@ -12,6 +12,7 @@ type ViewState = 'input' | 'result' | 'form' | 'success'
 export default function HomePage() {
   const [view, setView] = useState<ViewState>('input')
   const [analysisData, setAnalysisData] = useState<AnalyzeResponse | null>(null)
+  const [redirectError, setRedirectError] = useState<string | null>(null)
 
   const analyzeMutation = useMutation({
     mutationFn: analyzeUrl,
@@ -26,8 +27,16 @@ export default function HomePage() {
     onSuccess: (data) => {
       setView('success')
       if (data.access_token && analysisData) {
-        const apiBase = import.meta.env.VITE_API_URL || ''
-        const reportUrl = `${apiBase}/report/${analysisData.report_id}?token=${data.access_token}`
+        // Rapportsidan serveras av backend — utan VITE_API_URL skulle en relativ
+        // länk hamna på frontend-domänen och visa en tom sida.
+        if (!BACKEND_ORIGIN) {
+          setRedirectError(
+            'Rapporten skapades, men kunde inte öppnas: VITE_API_URL saknas i bygget. Kontakta support.'
+          )
+          console.error('VITE_API_URL saknas — kan inte länka till rapportsidan.')
+          return
+        }
+        const reportUrl = `${BACKEND_ORIGIN}/report/${analysisData.report_id}?token=${data.access_token}`
         setTimeout(() => {
           window.location.href = reportUrl
         }, 1500)
@@ -96,6 +105,12 @@ export default function HomePage() {
               isLoading={leadMutation.isPending}
               isSuccess={view === 'success'}
             />
+          )}
+
+          {redirectError && (
+            <p className="mt-4 text-center text-red-500 font-medium max-w-2xl mx-auto">
+              {redirectError}
+            </p>
           )}
         </section>
       )}

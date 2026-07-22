@@ -96,7 +96,8 @@ class FullReportResponse(BaseModel):
     recommendations: List[str]  # 5 concrete recommendations
 
     # AI generation status
-    ai_generated: bool = False  # True when AI analysis is complete
+    ai_generated: bool = False  # True when genuine AI analysis succeeded
+    ai_completed: bool = False  # True when background generation finished (even on fallback)
 
     created_at: datetime
 

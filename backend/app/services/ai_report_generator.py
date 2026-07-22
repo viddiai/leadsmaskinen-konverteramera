@@ -348,6 +348,8 @@ class AIReportGenerator:
             "detected_industry": self.industry,
             "industry_label": self.industry_label,
             "industry_confidence": self.industry_confidence,
+            # Fallback content — inte äkta AI-analys
+            "ai_success": False,
         }
 
     async def generate_all_sections(self) -> Dict[str, Any]:
@@ -407,7 +409,7 @@ DATA:
 - Problem: {self.logical_errors[:3]}
 
 BETYG att justera (1-5, baserat på kvalitet):
-VP:{criteria_scores.get('value_proposition', 0)} LM:{criteria_scores.get('lead_magnets', 0)} Form:{criteria_scores.get('form_design', 0)} SP:{criteria_scores.get('social_proof', 0)} CTA:{criteria_scores.get('call_to_action', 0)} Guide:{criteria_scores.get('guiding_content', 0)}
+VP:{criteria_scores.get('value_proposition', 0)} LM:{criteria_scores.get('lead_magnets', 0)} Form:{criteria_scores.get('form_design', 0)} SP:{criteria_scores.get('social_proof', 0)} CTA:{criteria_scores.get('call_to_action', 0)} Guide:{criteria_scores.get('guiding_content', 0)} Erbjudande:{criteria_scores.get('offer_structure', 0)}
 
 Svara ENDAST JSON:
 {{
@@ -416,8 +418,8 @@ Svara ENDAST JSON:
   "forms_analysis": "1 stycke om formulär.",
   "cta_analysis": "1 stycke om CTAs.",
   "logical_verdict": "2 stycken hård kritik: 'Ni begår misstaget att...'",
-  "adjusted_scores": {{"value_proposition": 3, "lead_magnets": 2, "form_design": 3, "social_proof": 2, "call_to_action": 3, "guiding_content": 2}},
-  "criteria_explanations": {{"value_proposition": "1 mening", "lead_magnets": "1 mening", "form_design": "1 mening", "social_proof": "1 mening", "call_to_action": "1 mening", "guiding_content": "1 mening"}},
+  "adjusted_scores": {{"value_proposition": 3, "lead_magnets": 2, "form_design": 3, "social_proof": 2, "call_to_action": 3, "guiding_content": 2, "offer_structure": 3}},
+  "criteria_explanations": {{"value_proposition": "1 mening", "lead_magnets": "1 mening", "form_design": "1 mening", "social_proof": "1 mening", "call_to_action": "1 mening", "guiding_content": "1 mening", "offer_structure": "1 mening"}},
   "summary_assessment": "2-3 korta punkter om styrkor och svagheter."
 }}"""
 
@@ -440,6 +442,7 @@ Svara ENDAST JSON:
                 sections["detected_industry"] = self.industry
                 sections["industry_label"] = self.industry_label
                 sections["industry_confidence"] = self.industry_confidence
+                sections["ai_success"] = True
 
                 logger.info("Successfully generated all sections in single API call")
                 return sections
@@ -468,6 +471,7 @@ Svara ENDAST JSON:
             "detected_industry": self.industry,
             "industry_label": self.industry_label,
             "industry_confidence": self.industry_confidence,
+            "ai_success": False,
         }
 
 

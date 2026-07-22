@@ -2,10 +2,18 @@
 nixPkgs = ["python311", "gcc"]
 
 [phases.install]
-cmds = ["python -m venv /opt/venv && . /opt/venv/bin/activate && pip install -r requirements.txt"]
+cmds = [
+    "python -m venv /opt/venv && . /opt/venv/bin/activate && pip install -r requirements.txt",
+    # Chromium för JS-rendering av SPA-sajter. --with-deps installerar
+    # systembibliotek via apt. Fast browserpath så runtime hittar binären.
+    ". /opt/venv/bin/activate && PLAYWRIGHT_BROWSERS_PATH=/opt/playwright playwright install --with-deps chromium",
+]
 
 [phases.build]
 cmds = ["echo 'Build complete'"]
+
+[variables]
+PLAYWRIGHT_BROWSERS_PATH = "/opt/playwright"
 
 [start]
 cmd = ". /opt/venv/bin/activate && uvicorn app.main:app --host 0.0.0.0 --port $PORT"

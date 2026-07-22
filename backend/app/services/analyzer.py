@@ -4,6 +4,7 @@ Uses structured problem tagging according to the analyzer prompt methodology.
 """
 from typing import Dict, List, Any, Tuple, Optional
 from app.models.models import CRITERIA_LABELS
+from app.services.scraper import contains_keyword
 
 # Viktning enligt analyzer_prompt.md
 CATEGORY_WEIGHTS = {
@@ -101,9 +102,9 @@ class ConversionAnalyzer:
                 "evidence": f"Hittade H1 ({h1_length} tecken): '{h1[:50]}...'"
             })
 
-        # Kontrollera vaga rubriker
+        # Kontrollera vaga rubriker (hela ord — "hem" ska inte matcha "hemleverans")
         vague_phrases = ["välkommen", "welcome", "vi är", "we are", "hem", "home"]
-        if h1 and any(phrase in h1.lower() for phrase in vague_phrases):
+        if h1 and contains_keyword(h1.lower(), vague_phrases):
             problems.append({
                 "tag": "unclear_headline",
                 "severity": "high",
@@ -133,7 +134,7 @@ class ConversionAnalyzer:
             })
 
         # Beräkna poäng baserat på promptens poängguide
-        if not h1 or (h1 and any(phrase in h1.lower() for phrase in vague_phrases)):
+        if not h1 or (h1 and contains_keyword(h1.lower(), vague_phrases)):
             score = 1  # Rubriken förklarar inte vad företaget gör
         elif not has_hero and not has_subheadline:
             score = 2  # Värdeerbjudande finns men fokuserar på egenskaper
@@ -214,7 +215,7 @@ class ConversionAnalyzer:
         strong_patterns = ["gratis", "free", "starta", "start", "prova", "try",
                           "boka", "book", "få", "get", "hämta", "ladda"]
         has_strong_cta = any(
-            any(p in cta.get("text", "").lower() for p in strong_patterns)
+            contains_keyword(cta.get("text", "").lower(), strong_patterns)
             for cta in ctas
         )
 
@@ -543,17 +544,6 @@ class ConversionAnalyzer:
                 "evidence": None
             })
 
-        # Generell brist på processförklaring (vi kan inte detektera detta fullt ut utan djupare analys)
-        # Vi antar att de flesta sidor saknar explicit processförklaring
-        if lead_forms or ctas:
-            problems.append({
-                "tag": "no_process_explanation",
-                "severity": "low",
-                "description": "Det är oklart vad som händer efter att besökaren tar kontakt.",
-                "recommendation": "Lägg till en 'Så här fungerar det'-sektion: '1. Du fyller i formuläret → 2. Vi ringer dig inom 24h → 3. Tillsammans tar vi fram en plan'.",
-                "evidence": None
-            })
-
         # Beräkna poäng baserat på grundläggande struktur
         has_forms = len(lead_forms) > 0
         has_ctas = len(ctas) > 0
@@ -609,7 +599,7 @@ class ConversionAnalyzer:
                                    "demo", "test", "provperiod", "trial", "ingen bindning",
                                    "no commitment", "konsultation", "consultation"]
             has_free_offer = any(
-                any(kw in cta.get("text", "").lower() for kw in low_barrier_keywords)
+                contains_keyword(cta.get("text", "").lower(), low_barrier_keywords)
                 for cta in ctas
             )
 

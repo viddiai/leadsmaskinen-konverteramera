@@ -49,7 +49,7 @@ export function AnalysisResult({ data, onGetFullReport }: AnalysisResultProps) {
       <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
         <div className="flex items-center gap-2 text-red-600 font-medium mb-3">
           <AlertTriangle size={20} />
-          <span>Identifierade problem ({data.issues_count})</span>
+          <span>Identifierade problem ({data.issues_count || data.logical_errors.length})</span>
         </div>
         <ul className="space-y-2">
           {data.logical_errors.map((error, index) => (

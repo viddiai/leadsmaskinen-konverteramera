@@ -517,7 +517,7 @@ REPORT_PAGE_TEMPLATE = '''
                     showError('Kunde inte rendera rapporten: ' + renderErr.message);
                 }
 
-                if (!data.ai_generated && pollCount < MAX_POLLS) {
+                if (!isGenerationDone(data) && pollCount < MAX_POLLS) {
                     pollCount++;
                     setTimeout(() => { refreshReport(reportId, token); }, 2000);
                 }
@@ -526,13 +526,17 @@ REPORT_PAGE_TEMPLATE = '''
             }
         }
 
+        function isGenerationDone(data) {
+            return Boolean(data.ai_completed || data.ai_generated);
+        }
+
         async function refreshReport(reportId, token) {
             try {
                 const response = await fetch('/api/report/' + reportId + '?token=' + token);
                 if (response.ok) {
                     const data = await response.json();
                     renderReport(data);
-                    if (!data.ai_generated && pollCount < MAX_POLLS) {
+                    if (!isGenerationDone(data) && pollCount < MAX_POLLS) {
                         pollCount++;
                         setTimeout(() => { refreshReport(reportId, token); }, 2000);
                     }
@@ -662,7 +666,7 @@ REPORT_PAGE_TEMPLATE = '''
                         <h2 style="margin-bottom:0;">Avgörande insikter</h2>
                     </div>
                     <p style="white-space:pre-line;">
-                        ${data.logical_verdict ? escapeHtml(data.logical_verdict) : (data.ai_generated ? 'Ingen detaljerad analys tillgänglig.' : '<span style="display:inline-flex;align-items:center;gap:8px;color:var(--steel)"><span class="spinner" style="width:16px;height:16px;border-width:2px;margin:0;"></span> Genererar AI-analys...</span>')}
+                        ${data.logical_verdict ? escapeHtml(data.logical_verdict) : (isGenerationDone(data) ? (data.ai_generated ? 'Ingen detaljerad analys tillgänglig.' : 'AI-fördjupningen kunde inte genereras just nu. Rapporten nedan baseras på den regelbaserade analysen av er webbplats.') : (pollCount >= MAX_POLLS ? 'AI-analysen tar längre tid än väntat. Ladda om sidan om en stund för att se den fördjupade analysen.' : '<span style="display:inline-flex;align-items:center;gap:8px;color:var(--steel)"><span class="spinner" style="width:16px;height:16px;border-width:2px;margin:0;"></span> Genererar AI-analys...</span>'))}
                     </p>
                 </div>
 

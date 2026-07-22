@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { getLeads, getReports, getDashboardStats } from '../utils/api'
+import { getLeads, getReports, getDashboardStats, BACKEND_ORIGIN } from '../utils/api'
 import {
   Users,
   FileText,
@@ -241,7 +241,7 @@ export default function AdminPage() {
                         <td className="py-3">
                           {report.access_token ? (
                             <a
-                              href={`/api/report/${report.id}/pdf?token=${report.access_token}`}
+                              href={`${BACKEND_ORIGIN}/api/report/${report.id}/pdf?token=${report.access_token}`}
                               className="inline-flex items-center gap-1 px-2 py-1 bg-softwhite text-steel rounded hover:bg-lightgrey transition-colors border border-lightgrey"
                               title="Ladda ner PDF"
                             >
@@ -280,13 +280,13 @@ export default function AdminPage() {
     primaryColor: '#FF6A3D'
   };
 </script>
-<script src="${window.location.origin}/api/widget.js"></script>`}
+<script src="${BACKEND_ORIGIN || window.location.origin}/api/widget.js"></script>`}
             </pre>
           </div>
           <p className="text-steel text-xs mt-2">
             Eller använd iframe:{' '}
             <code className="bg-softwhite px-1 rounded text-graphite border border-lightgrey">
-              {`<iframe src="${window.location.origin}/widget/embed" width="500" height="400"></iframe>`}
+              {`<iframe src="${BACKEND_ORIGIN || window.location.origin}/widget/embed" width="500" height="400"></iframe>`}
             </code>
           </p>
         </div>

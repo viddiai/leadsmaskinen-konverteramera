@@ -61,14 +61,24 @@ def generate_ai_sync(report_id: int, scraped_data: dict, analysis: dict):
                     # Merge AI sections into existing report
                     full_report = dict(report.full_report)  # Make mutable copy
 
-                    # Comprehensive AI sections (new format)
-                    full_report["short_description"] = enhanced_sections.get("short_description", "")
-                    full_report["lead_magnets_analysis"] = enhanced_sections.get("lead_magnets_analysis", "")
-                    full_report["forms_analysis"] = enhanced_sections.get("forms_analysis", "")
-                    full_report["cta_analysis"] = enhanced_sections.get("cta_analysis", "")
-                    full_report["logical_verdict"] = enhanced_sections.get("logical_verdict", "")
-                    full_report["summary_assessment"] = enhanced_sections.get("summary_assessment", "")
-                    full_report["criteria_explanations"] = enhanced_sections.get("criteria_explanations", {})
+                    ai_success = bool(enhanced_sections.get("ai_success"))
+
+                    # Comprehensive AI sections (new format).
+                    # Skriv bara över befintlig text om AI faktiskt levererade innehåll —
+                    # annars behålls analyzerns ursprungliga texter.
+                    mergeable_fields = [
+                        "short_description",
+                        "lead_magnets_analysis",
+                        "forms_analysis",
+                        "cta_analysis",
+                        "logical_verdict",
+                        "summary_assessment",
+                        "criteria_explanations",
+                    ]
+                    for field in mergeable_fields:
+                        value = enhanced_sections.get(field)
+                        if value:
+                            full_report[field] = value
 
                     # Apply AI-adjusted scores (quality-based, not just structural)
                     adjusted_scores = enhanced_sections.get("adjusted_scores", {})
@@ -105,33 +115,76 @@ def generate_ai_sync(report_id: int, scraped_data: dict, analysis: dict):
                             "guiding_content": 1.0,
                             "offer_structure": 1.0,
                         }
-                        total_weight = sum(weights.values())  # 9.0
+                        # Nämnaren beräknas från de kriterier som faktiskt finns i analysen,
+                        # så att en saknad/extra rad inte skevar totalpoängen.
+                        total_weight = sum(
+                            weights.get(c["criterion"], 1.0)
+                            for c in criteria_analysis
+                        )
                         weighted_sum = sum(
                             c["score"] * weights.get(c["criterion"], 1.0)
                             for c in criteria_analysis
                         )
-                        new_overall = round(weighted_sum / total_weight, 1)
+                        new_overall = round(weighted_sum / total_weight, 1) if total_weight else 0.0
                         full_report["overall_score"] = new_overall
                         report.overall_score = new_overall  # Update Report model too
                         print(f"📊 Applied AI-adjusted scores for report {report_id}: overall {new_overall}/5 (weighted)")
 
-                    # Legacy fields (backward compatibility)
-                    full_report["final_hook"] = enhanced_sections.get("final_hook", "")
-                    full_report["detailed_lead_magnets"] = enhanced_sections.get("detailed_lead_magnets", "")
-                    full_report["detailed_forms"] = enhanced_sections.get("detailed_forms", "")
-                    full_report["detailed_social_proof"] = enhanced_sections.get("detailed_social_proof", "")
-                    full_report["detailed_mailto"] = enhanced_sections.get("detailed_mailto", "")
-                    full_report["detailed_ungated_pdfs"] = enhanced_sections.get("detailed_ungated_pdfs", "")
+                        # Synka AnalysisData-raderna så adminstatistiken visar samma
+                        # poäng som kundens rapport
+                        criteria_by_key = {c["criterion"]: c for c in criteria_analysis}
+                        explanations = full_report.get("criteria_explanations") or {}
+                        for row in db.query(AnalysisData).filter(
+                            AnalysisData.report_id == report_id
+                        ).all():
+                            updated = criteria_by_key.get(row.criterion)
+                            if updated:
+                                row.score = updated["score"]
+                                if explanations.get(row.criterion):
+                                    row.explanation = explanations[row.criterion]
 
-                    full_report["ai_generated"] = True
+                    # Legacy fields (backward compatibility)
+                    legacy_fields = [
+                        "final_hook",
+                        "detailed_lead_magnets",
+                        "detailed_forms",
+                        "detailed_social_proof",
+                        "detailed_mailto",
+                        "detailed_ungated_pdfs",
+                    ]
+                    for field in legacy_fields:
+                        value = enhanced_sections.get(field)
+                        if value:
+                            full_report[field] = value
+
+                    # ai_generated = äkta AI-analys; ai_completed = bakgrundsjobbet klart
+                    # (rapportsidan slutar polla på ai_completed)
+                    full_report["ai_generated"] = ai_success
+                    full_report["ai_completed"] = True
 
                     report.full_report = full_report
                     db.commit()
-                    print(f"✅ AI generation complete for report {report_id}")
+                    status_label = "AI" if ai_success else "fallback"
+                    print(f"✅ Background generation complete for report {report_id} ({status_label})")
             finally:
                 db.close()
         except Exception as e:
             print(f"❌ Background AI generation failed for report {report_id}: {e}")
+            # Markera jobbet som avslutat så rapportsidan inte pollar i onödan
+            try:
+                db = SessionLocal()
+                try:
+                    report = db.query(Report).filter(Report.id == report_id).first()
+                    if report and report.full_report:
+                        full_report = dict(report.full_report)
+                        full_report["ai_completed"] = True
+                        full_report["ai_generated"] = False
+                        report.full_report = full_report
+                        db.commit()
+                finally:
+                    db.close()
+            except Exception as inner:
+                print(f"❌ Could not mark report {report_id} as completed: {inner}")
 
     # Run in a new event loop (since BackgroundTasks runs in a thread)
     asyncio.run(_generate())
@@ -198,6 +251,7 @@ async def analyze_url(
             "industry_label": industry_label,
             "industry_confidence": industry_confidence,
             "ai_generated": False,  # Will be set to True when AI completes
+            "ai_completed": False,  # True när bakgrundsjobbet är klart (även vid fallback)
         }
 
         # Create report in database
@@ -425,6 +479,7 @@ async def get_full_report(
             summary_assessment=ensure_string(full_data.get("summary_assessment")) or "",
             recommendations=full_data.get("recommendations", []),
             ai_generated=full_data.get("ai_generated", False),
+            ai_completed=full_data.get("ai_completed", full_data.get("ai_generated", False)),
             created_at=report.created_at,
         )
     except Exception as e:
